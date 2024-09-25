@@ -1,6 +1,7 @@
 from django.urls import resolve
-from django.test import TestCase
+from django.test import TestCase, override_settings, Client
 from django.http import HttpRequest
+from django.template.loader import render_to_string
 
 
 from lists.views import home
@@ -26,7 +27,11 @@ class HomePageTest(TestCase):
         self.assertIn(b"<title>To-Do lists</title>", response.content)
         self.assertTrue(response.content.endswith(b"</html>"))
 
-    def test_home_page_can_input_item_correctly(self):
+    @override_settings(MIDDLEWARE=[])
+    def test_home_page_can_save_a_POST_request(self):
         request = HttpRequest()
+        request.method = "POST"
+        request.POST["item_text"] = "Buy a feather"
+
         response = home(request)
-        print(response)
+        self.assertEqual(response.status_code, 200)
