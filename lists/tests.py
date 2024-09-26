@@ -3,7 +3,7 @@ from django.test import TestCase, override_settings, Client
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 
-
+from lists.models import Item
 from lists.views import home
 
 
@@ -35,3 +35,23 @@ class HomePageTest(TestCase):
 
         response = home(request)
         self.assertEqual(response.status_code, 200)
+
+
+class ItemModels(TestCase):
+
+    def save_item(self, text):
+        item = Item()
+        item.item_text = text
+        item.save()
+
+    def test_saving_and_retrieving_items(self):
+        self.save_item("The first (ever) list item")
+        self.save_item("Item the second")
+
+        saved_items = Item.objects.all()
+        self.assertEqual(saved_items.count(), 2)
+
+        first_item = saved_items[0]
+        second_item = saved_items[1]
+        self.assertEqual(first_item.item_text, "The first (ever) list item")
+        self.assertEqual(second_item.item_text, "Item the second")
