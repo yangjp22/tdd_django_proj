@@ -34,7 +34,7 @@ class HomePageTest(TestCase):
         request.POST["item_text"] = "Buy a feather"
 
         response = home(request)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
 
 class ItemModels(TestCase):
@@ -55,3 +55,34 @@ class ItemModels(TestCase):
         second_item = saved_items[1]
         self.assertEqual(first_item.item_text, "The first (ever) list item")
         self.assertEqual(second_item.item_text, "Item the second")
+
+    def test_home_page_can_save_a_POST_request(self):
+        request = HttpRequest()
+        request.method = "POST"
+        request.POST["item_text"] = "A new list item"
+
+        _ = home(request)
+
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.all()[0]
+        self.assertEqual(new_item.item_text, "A new list item")
+
+    def test_home_page_can_redirect_after_POST_request(self):
+        request = HttpRequest()
+        request.method = "POST"
+        request.POST["item_text"] = "A new list item"
+
+        response = home(request)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["location"], "/")
+
+    def test_home_page_displays_all_list_items(self):
+        Item.objects.create(item_text="itemey 1")
+        Item.objects.create(item_text="itemey 2")
+
+        request = HttpRequest()
+        response = home(request)
+
+        self.assertIn("itemey 1", response.content.decode())
+        self.assertIn("itemey 2", response.content.decode())
